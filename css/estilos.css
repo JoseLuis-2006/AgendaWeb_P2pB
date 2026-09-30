@@ -1,0 +1,379 @@
+/* ==========================================================================
+   SISTEMA DE DISEÑO: CLARIDAD SERENA (AGENDAWEB)
+   ========================================================================== */
+
+:root {
+  /* Tipografías */
+  --fuente-titulo: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --fuente-cuerpo: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Paleta de Colores (WCAG AA Compliant) */
+  --color-fondo: #D2E9FF;             /* Base azulada clara */
+  --color-superficie: #FFFFFF;        /* Tarjetas y contenedores */
+  --color-superficie-suave: #EBF5FF;  /* Resaltados y hovers */
+  
+  --color-texto-principal: #0F172A;   /* Títulos e información clave */
+  --color-texto-secundario: #475569;  /* Metadatos y descripciones */
+
+  --color-acento: #2563EB;            /* Botones primarios y enlaces */
+  --color-acento-hover: #1D4ED8;
+  --color-teal: #0D9488;              /* Etiquetas de estado */
+  
+  --color-borde: #CBD5E1;             /* Divisores e inputs */
+  --color-peligro: #DC2626;           /* Botones de borrar */
+  --color-peligro-bg: #FEF2F2;
+
+  /* Constantes de Estructura */
+  --radio-borde: 12px;
+  --sombra-tarjeta: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+}
+
+/* 1. Reset Global y Estructura Base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--fuente-cuerpo);
+  background-color: var(--color-fondo);
+  color: var(--color-texto-principal);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.5;
+}
+
+.contenedor {
+  width: min(100% - 32px, 960px);
+  margin-inline: auto;
+}
+
+main.contenedor {
+  flex: 1;
+  padding: 32px 0 48px;
+}
+
+/* 2. Encabezado Global (Barra de Navegación) */
+.site-header {
+  background-color: var(--color-superficie);
+  border-bottom: 1px solid var(--color-borde);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.site-header__inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+}
+
+.logo {
+  font-family: var(--fuente-titulo);
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--color-texto-principal);
+  letter-spacing: -0.02em;
+}
+
+.logo span {
+  color: var(--color-acento);
+}
+
+.nav {
+  display: flex;
+  gap: 8px;
+}
+
+.nav__link {
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--color-texto-secundario);
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.nav__link:hover {
+  color: var(--color-acento);
+  background-color: var(--color-superficie-suave);
+}
+
+.nav__link.is-active {
+  color: var(--color-acento);
+  background-color: var(--color-superficie-suave);
+  font-weight: 600;
+}
+
+/* 3. Encabezados de Página y Alertas */
+.page__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.page__title {
+  font-family: var(--fuente-titulo);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-texto-principal);
+}
+
+.page__subtitle {
+  color: var(--color-texto-secundario);
+  font-size: 0.95rem;
+  margin-top: 2px;
+}
+
+.alert {
+  padding: 14px 18px;
+  border-radius: var(--radio-borde);
+  margin-bottom: 24px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.alert--ok {
+  background-color: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+/* 4. Estructura de Tarjetas y Formulario */
+.tarjeta, .card {
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-borde);
+  padding: 24px;
+  box-shadow: var(--sombra-tarjeta);
+}
+
+.tarjeta h2 {
+  font-family: var(--fuente-titulo);
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+  color: var(--color-texto-principal);
+}
+
+/* Formulario */
+.formulario-evento {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.grupo-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.campo-completo {
+  grid-column: 1 / -1;
+}
+
+label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-texto-principal);
+}
+
+input, select, textarea {
+  font-family: var(--fuente-cuerpo);
+  font-size: 0.95rem;
+  padding: 10px 14px;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background-color: #FAFAFA;
+  color: var(--color-texto-principal);
+  outline: none;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-acento);
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Errores en formulario */
+.input-error {
+  border-color: var(--color-peligro) !important;
+  background-color: var(--color-peligro-bg) !important;
+}
+
+.error-texto {
+  color: var(--color-peligro);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* 5. Rejilla de Tarjetas de Eventos (index.php) */
+.card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.card-list .card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.card__badge {
+  align-self: flex-start;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  margin-bottom: 12px;
+  letter-spacing: 0.03em;
+}
+
+.badge-teal { background-color: #CCFBF1; color: var(--color-teal); }
+.badge-azul { background-color: #DBEAFE; color: var(--color-acento); }
+
+.card__title {
+  font-family: var(--fuente-titulo);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  line-height: 1.35;
+}
+
+.card__meta {
+  font-size: 0.85rem;
+  color: var(--color-texto-secundario);
+  margin-bottom: 12px;
+}
+
+.card__text {
+  font-size: 0.925rem;
+  color: var(--color-texto-secundario);
+  margin-bottom: 16px;
+}
+
+.card__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto; /* Alinea los botones al fondo de la tarjeta */
+  padding-top: 16px;
+  border-top: 1px solid var(--color-borde);
+}
+
+/* 6. Botones */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-acento);
+  color: #FFFFFF;
+  font-family: var(--fuente-titulo);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-acento-hover);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: var(--color-texto-principal);
+  border: 1px solid var(--color-borde);
+  font-family: var(--fuente-titulo);
+  font-weight: 500;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-superficie-suave);
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: var(--color-peligro);
+  border: 1px solid #FCA5A5;
+  font-family: var(--fuente-titulo);
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-danger:hover {
+  background-color: var(--color-peligro-bg);
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 0.85rem;
+}
+
+.form-inline {
+  margin: 0;
+  display: inline;
+}
+
+/* 7. Estado Vacío y Pie de Página */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background-color: var(--color-superficie);
+  border: 2px dashed var(--color-borde);
+  border-radius: var(--radio-borde);
+  margin-top: 24px;
+}
+
+.empty-state p {
+  color: var(--color-texto-secundario);
+  font-size: 1.05rem;
+  margin-bottom: 16px;
+}
+
+.site-footer {
+  background-color: var(--color-superficie);
+  border-top: 1px solid var(--color-borde);
+  padding: 20px 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-texto-secundario);
+}
+
+/* Adaptabilidad a dispositivos móviles */
+@media (max-width: 640px) {
+  .formulario-evento {
+    grid-template-columns: 1fr;
+  }
+  
+  .page__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
