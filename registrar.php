@@ -9,12 +9,13 @@ $descripcion = '';
 
 // Fase 3: Solo procesar si el método de envío es POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Sanitización inicial de entradas
-    $titulo      = trim($_POST['titulo']      ?? '');
-    $fecha       = trim($_POST['fecha']       ?? '');
-    $hora        = trim($_POST['hora']        ?? '');
-    $categoria   = trim($_POST['categoria']   ?? '');
-    $descripcion = trim($_POST['descripcion'] ?? '');
+    // Sanitización inicial de entradas (si alguien manda algo que no es texto, se toma como vacío)
+    $leer = fn(string $campo): string => is_string($_POST[$campo] ?? null) ? trim($_POST[$campo]) : '';
+    $titulo      = $leer('titulo');
+    $fecha       = $leer('fecha');
+    $hora        = $leer('hora');
+    $categoria   = $leer('categoria');
+    $descripcion = $leer('descripcion');
 
     // Fase 4: Lista blanca de categorías
     $categoriasOK = ['trabajo', 'personal', 'estudio', 'ocio'];
@@ -34,6 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!($fechaObj && $fechaObj->format('Y-m-d') === $fecha)) {
             $errores['fecha'] = 'Proporciona una fecha válida (AAAA-MM-DD).';
         }
+    }
+
+    // Validar Hora (opcional, pero si viene debe ser HH:MM)
+    if ($hora !== '' && !preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $hora)) {
+        $errores['hora'] = 'Proporciona una hora válida (HH:MM).';
     }
 
     // Validar Categoría
@@ -69,8 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
         $mysqli->close();
 
-        // Redirección del Patrón PRG (Fase 7)
-        header('Location: index.php?ok=1');
+        // Redirección del Patrón PRG (Fase 7). El 303 le dice al navegador que la siguiente
+        // petición sea GET, así recargar index.php no vuelve a enviar el formulario.
+        header('Location: index.php?ok=1', true, 303);
         exit;
     }
 }
@@ -146,9 +153,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input 
                         type="time" 
                         id="hora" 
-                        name="hora" 
+                        name="hora"
                         value="<?= htmlspecialchars($hora) ?>"
+                        class="<?= isset($errores['hora']) ? 'input-error' : '' ?>"
                     >
+                    <?php if (isset($errores['hora'])): ?>
+                        <span class="error-texto"><?= $errores['hora'] ?></span>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Campo: Categoría -->
@@ -176,8 +187,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <textarea 
                         id="descripcion" 
                         name="descripcion" 
-                        rows="3" 
+                        rows="3"
                         placeholder="Notas o detalles adicionales..."
+                        class="<?= isset($errores['descripcion']) ? 'input-error' : '' ?>"
                     ><?= htmlspecialchars($descripcion) ?></textarea>
                     <?php if (isset($errores['descripcion'])): ?>
                         <span class="error-texto"><?= $errores['descripcion'] ?></span>
