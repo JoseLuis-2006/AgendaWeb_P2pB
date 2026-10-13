@@ -377,3 +377,5 @@ input:focus, select:focus, textarea:focus {
     align-items: flex-start;
   }
 }
+.resumen { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+.resumen .card__badge { margin-bottom: 0; }

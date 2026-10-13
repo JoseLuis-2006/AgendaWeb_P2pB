@@ -1,24 +1,31 @@
 <?php
+require 'conexion.php';
+
+// Paso 4: las categorías salen de la base de datos
+$resultado  = $mysqli->query('SELECT id, nombre FROM categorias ORDER BY nombre');
+$categorias = $resultado->fetch_all(MYSQLI_ASSOC);
+$resultado->free();
+
+// La lista blanca también sale de la BD: [1, 2, 3, 4]
+$idsValidos = array_map('intval', array_column($categorias, 'id'));
+
 // Variables iniciales para el formulario pegajoso
 $errores     = [];
 $titulo      = '';
 $fecha       = '';
 $hora        = '';
-$categoria   = '';
+$categoriaId = 0;
 $descripcion = '';
 
-// Fase 3: Solo procesar si el método de envío es POST
+// Solo procesar si el método de envío es POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Sanitización inicial de entradas (si alguien manda algo que no es texto, se toma como vacío)
+    // Si alguien manda algo que no es texto, se toma como vacío
     $leer = fn(string $campo): string => is_string($_POST[$campo] ?? null) ? trim($_POST[$campo]) : '';
     $titulo      = $leer('titulo');
     $fecha       = $leer('fecha');
     $hora        = $leer('hora');
-    $categoria   = $leer('categoria');
+    $categoriaId = (int) $leer('categoria_id');   // ahora es un número
     $descripcion = $leer('descripcion');
-
-    // Fase 4: Lista blanca de categorías
-    $categoriasOK = ['trabajo', 'personal', 'estudio', 'ocio'];
 
     // Validar Título
     if ($titulo === '') {
@@ -42,9 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errores['hora'] = 'Proporciona una hora válida (HH:MM).';
     }
 
-    // Validar Categoría
-    if (!in_array($categoria, $categoriasOK, true)) {
-        $errores['categoria'] = 'Selecciona una categoría válida.';
+    // Validar Categoría contra la lista blanca que salió de la BD
+    if (!in_array($categoriaId, $idsValidos, true)) {
+        $errores['categoria_id'] = 'Elige una categoría válida.';
     }
 
     // Validar Descripción (Opcional, pero con límite)
@@ -54,29 +61,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Si no hay errores de validación, procedemos a guardar
     if (empty($errores)) {
-        require 'conexion.php';
+        // (ya no hay require 'conexion.php' aquí: la conexión está arriba)
 
-        // Manejo de valores opcionales para almacenar NULL en lugar de cadenas vacías
+        // NULL en lugar de cadenas vacías
         $hora_db        = ($hora !== '') ? $hora : null;
         $descripcion_db = ($descripcion !== '') ? $descripcion : null;
 
-        // Consulta preparada con comodines (?)
-        $sql = "INSERT INTO eventos (titulo, fecha, hora, categoria, descripcion) 
+        $sql = "INSERT INTO eventos (titulo, fecha, hora, categoria_id, descripcion)
                 VALUES (?, ?, ?, ?, ?)";
 
         $stmt = $mysqli->prepare($sql);
 
-        // "sssss" indica que se pasan 5 parámetros de tipo string
-        $stmt->bind_param("sssss", $titulo, $fecha, $hora_db, $categoria, $descripcion_db);
+        // s = string, i = integer → la 4ª (categoria_id) es número
+        $stmt->bind_param("sssis", $titulo, $fecha, $hora_db, $categoriaId, $descripcion_db);
 
-        // Ejecución y liberación de recursos
         $stmt->execute();
-        $nuevoId = $stmt->insert_id;
         $stmt->close();
         $mysqli->close();
 
-        // Redirección del Patrón PRG (Fase 7). El 303 le dice al navegador que la siguiente
-        // petición sea GET, así recargar index.php no vuelve a enviar el formulario.
+        // Patrón PRG: el 303 hace que la siguiente petición sea GET
         header('Location: index.php?ok=1', true, 303);
         exit;
     }
@@ -94,7 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
 
-    <!-- Asegúrate de incluir la carpeta css/ en la ruta -->
     <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body class="layout">
@@ -113,18 +115,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <section class="tarjeta">
             <h2>Nuevo Evento</h2>
 
-            <!-- Formulario autoprocesado -->
             <form method="post" action="" class="formulario-evento" novalidate>
-                
+
                 <!-- Campo: Título -->
                 <div class="grupo-campo">
                     <label for="titulo">Título *</label>
-                    <input 
-                        type="text" 
-                        id="titulo" 
-                        name="titulo" 
-                        placeholder="Ej. Reunión de proyecto" 
-                        value="<?= htmlspecialchars($titulo) ?>"
+                    <input
+                        type="text"
+                        id="titulo"
+                        name="titulo"
+                        placeholder="Ej. Reunión de proyecto"
+                        value="<?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?>"
                         class="<?= isset($errores['titulo']) ? 'input-error' : '' ?>"
                     >
                     <?php if (isset($errores['titulo'])): ?>
@@ -135,11 +136,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Campo: Fecha -->
                 <div class="grupo-campo">
                     <label for="fecha">Fecha *</label>
-                    <input 
-                        type="date" 
-                        id="fecha" 
-                        name="fecha" 
-                        value="<?= htmlspecialchars($fecha) ?>"
+                    <input
+                        type="date"
+                        id="fecha"
+                        name="fecha"
+                        value="<?= htmlspecialchars($fecha, ENT_QUOTES, 'UTF-8') ?>"
                         class="<?= isset($errores['fecha']) ? 'input-error' : '' ?>"
                     >
                     <?php if (isset($errores['fecha'])): ?>
@@ -150,11 +151,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Campo: Hora (Opcional) -->
                 <div class="grupo-campo">
                     <label for="hora">Hora</label>
-                    <input 
-                        type="time" 
-                        id="hora" 
+                    <input
+                        type="time"
+                        id="hora"
                         name="hora"
-                        value="<?= htmlspecialchars($hora) ?>"
+                        value="<?= htmlspecialchars($hora, ENT_QUOTES, 'UTF-8') ?>"
                         class="<?= isset($errores['hora']) ? 'input-error' : '' ?>"
                     >
                     <?php if (isset($errores['hora'])): ?>
@@ -162,35 +163,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php endif; ?>
                 </div>
 
-                <!-- Campo: Categoría -->
+                <!-- Campo: Categoría (opciones generadas desde la BD) -->
                 <div class="grupo-campo">
-                    <label for="categoria">Categoría *</label>
-                    <select 
-                        id="categoria" 
-                        name="categoria"
-                        class="<?= isset($errores['categoria']) ? 'input-error' : '' ?>"
+                    <label for="categoria_id">Categoría *</label>
+                    <select
+                        id="categoria_id"
+                        name="categoria_id"
+                        class="<?= isset($errores['categoria_id']) ? 'input-error' : '' ?>"
                     >
-                        <option value="">-- Selecciona --</option>
-                        <option value="trabajo" <?= $categoria === 'trabajo' ? 'selected' : '' ?>>Trabajo</option>
-                        <option value="personal" <?= $categoria === 'personal' ? 'selected' : '' ?>>Personal</option>
-                        <option value="estudio" <?= $categoria === 'estudio' ? 'selected' : '' ?>>Estudio</option>
-                        <option value="ocio" <?= $categoria === 'ocio' ? 'selected' : '' ?>>Ocio</option>
+                        <option value="">— Elige una —</option>
+                        <?php foreach ($categorias as $cat): ?>
+                            <option value="<?= (int) $cat['id'] ?>"
+                                <?= $categoriaId === (int) $cat['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($cat['nombre'], ENT_QUOTES, 'UTF-8') ?>
+                            </option>
+                        <?php endforeach; ?>
                     </select>
-                    <?php if (isset($errores['categoria'])): ?>
-                        <span class="error-texto"><?= $errores['categoria'] ?></span>
+                    <?php if (isset($errores['categoria_id'])): ?>
+                        <span class="error-texto"><?= $errores['categoria_id'] ?></span>
                     <?php endif; ?>
                 </div>
 
                 <!-- Campo: Descripción -->
                 <div class="grupo-campo campo-completo">
                     <label for="descripcion">Descripción</label>
-                    <textarea 
-                        id="descripcion" 
-                        name="descripcion" 
+                    <textarea
+                        id="descripcion"
+                        name="descripcion"
                         rows="3"
                         placeholder="Notas o detalles adicionales..."
                         class="<?= isset($errores['descripcion']) ? 'input-error' : '' ?>"
-                    ><?= htmlspecialchars($descripcion) ?></textarea>
+                    ><?= htmlspecialchars($descripcion, ENT_QUOTES, 'UTF-8') ?></textarea>
                     <?php if (isset($errores['descripcion'])): ?>
                         <span class="error-texto"><?= $errores['descripcion'] ?></span>
                     <?php endif; ?>
