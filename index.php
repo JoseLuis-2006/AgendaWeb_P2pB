@@ -1,4 +1,5 @@
 <?php
+require __DIR__ . '/partes/sesion.php';
 require 'conexion.php';
 
 // Avisos que llegan por la URL después de una redirección (patrón PRG)
@@ -6,34 +7,47 @@ $avisos = [
     'ok'        => 'Evento guardado correctamente.',
     'editado'   => 'Evento actualizado correctamente.',
     'eliminado' => 'Evento eliminado.',
+    'noexiste'  => 'Ese evento no existe.',
 ];
 $aviso = null;
+$claseAviso = 'alert--ok';
 foreach ($avisos as $clave => $mensaje) {
     if (($_GET[$clave] ?? null) === '1') {
         $aviso = $mensaje;
+        if ($clave === 'noexiste') {
+            $claseAviso = 'alert--error';
+        }
         break;
     }
 }
 
-// Paso 5: JOIN para traer el NOMBRE de la categoría (en la tabla solo hay un número)
-$resultado = $mysqli->query(
+// Paso 5: JOIN para traer el NOMBRE de la categoría + Paso 7: solo los eventos de ESTE usuario
+$stmt = $mysqli->prepare(
     'SELECT e.id, e.titulo, e.fecha, e.hora, e.descripcion,
             c.id AS categoria_id, c.nombre AS categoria
        FROM eventos e
        JOIN categorias c ON c.id = e.categoria_id
+      WHERE e.usuario_id = ?
       ORDER BY e.fecha ASC, e.hora ASC'
 );
-$eventos = $resultado->fetch_all(MYSQLI_ASSOC);
-$resultado->free();
+$stmt->bind_param('i', $usuarioId);
+$stmt->execute();
+$eventos = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
 
-// Paso 6: resumen por categoría. LEFT JOIN para que también salgan las que tienen 0 eventos
-$resumen = $mysqli->query(
+// Paso 6: resumen por categoría. El filtro va en el ON (no en un WHERE) para que
+// las categorías sin eventos tuyos sigan apareciendo con 0.
+$stmt = $mysqli->prepare(
     'SELECT c.nombre, COUNT(e.id) AS total
        FROM categorias c
-       LEFT JOIN eventos e ON e.categoria_id = c.id
+       LEFT JOIN eventos e ON e.categoria_id = c.id AND e.usuario_id = ?
       GROUP BY c.id, c.nombre
       ORDER BY c.nombre'
-)->fetch_all(MYSQLI_ASSOC);
+);
+$stmt->bind_param('i', $usuarioId);
+$stmt->execute();
+$resumen = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
 
 $mysqli->close();
 ?>
@@ -57,6 +71,8 @@ $mysqli->close();
             <nav class="nav">
                 <a href="index.php" class="nav__link is-active">Mis eventos</a>
                 <a href="registrar.php" class="nav__link">Nuevo evento</a>
+                <span class="nav__link">Hola, <?= htmlspecialchars($usuarioNombre, ENT_QUOTES, 'UTF-8') ?></span>
+                <a href="logout.php" class="nav__link">Salir</a>
             </nav>
         </div>
     </header>
@@ -65,7 +81,7 @@ $mysqli->close();
 
         <!-- AVISO DINÁMICO (Patrón PRG) -->
         <?php if ($aviso !== null): ?>
-            <div class="alert alert--ok" role="status">&#9989; <?= htmlspecialchars($aviso, ENT_QUOTES, 'UTF-8') ?></div>
+            <div class="alert <?= $claseAviso ?>" role="status"><?= $claseAviso === 'alert--ok' ? '&#9989;' : '&#9888;&#65039;' ?> <?= htmlspecialchars($aviso, ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>
 
         <div class="page__header">
@@ -117,7 +133,7 @@ $mysqli->close();
                             <a href="editar.php?id=<?= (int) $evento['id'] ?>" class="btn-secondary btn-sm">Editar</a>
 
                             <!-- Eliminar usa POST (nunca un enlace) y pide confirmación -->
-                            <form action="eliminar.php" method="post" class="form-inline"
+                            <form action="borrar.php" method="post" class="form-inline"
                                   onsubmit="return confirm('¿Eliminar este evento? Esta acción no se puede deshacer.');">
                                 <input type="hidden" name="id" value="<?= (int) $evento['id'] ?>">
                                 <button type="submit" class="btn-danger btn-sm">Eliminar</button>

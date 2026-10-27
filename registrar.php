@@ -1,4 +1,5 @@
 <?php
+require __DIR__ . '/partes/sesion.php';
 require 'conexion.php';
 
 // Paso 4: las categorías salen de la base de datos
@@ -67,13 +68,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hora_db        = ($hora !== '') ? $hora : null;
         $descripcion_db = ($descripcion !== '') ? $descripcion : null;
 
-        $sql = "INSERT INTO eventos (titulo, fecha, hora, categoria_id, descripcion)
-                VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO eventos (usuario_id, titulo, fecha, hora, categoria_id, descripcion)
+                VALUES (?, ?, ?, ?, ?, ?)";
 
         $stmt = $mysqli->prepare($sql);
 
-        // s = string, i = integer → la 4ª (categoria_id) es número
-        $stmt->bind_param("sssis", $titulo, $fecha, $hora_db, $categoriaId, $descripcion_db);
+        // i s s s i s → usuario_id (i) va primero y categoria_id (i) es la 5ª
+        $stmt->bind_param("isssis", $usuarioId, $titulo, $fecha, $hora_db, $categoriaId, $descripcion_db);
 
         $stmt->execute();
         $stmt->close();

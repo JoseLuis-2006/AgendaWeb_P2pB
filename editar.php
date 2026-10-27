@@ -1,4 +1,5 @@
 <?php
+require __DIR__ . '/partes/sesion.php';
 require 'conexion.php';
 
 // 1. El id viene en la URL (editar.php?id=5). Se valida que sea un entero positivo.
@@ -10,15 +11,16 @@ if ($id === false || $id < 1) {
 
 // 2. Cargar el evento actual (consulta preparada)
 $stmt = $mysqli->prepare(
-    'SELECT titulo, fecha, hora, categoria_id, descripcion FROM eventos WHERE id = ?'
+    'SELECT titulo, fecha, hora, categoria_id, descripcion
+       FROM eventos WHERE id = ? AND usuario_id = ?'
 );
-$stmt->bind_param('i', $id);
+$stmt->bind_param('ii', $id, $usuarioId);
 $stmt->execute();
 $evento = $stmt->get_result()->fetch_assoc();   // null si no existe
 $stmt->close();
 
-if ($evento === null) {          // id que no existe: de vuelta a la lista
-    header('Location: index.php');
+if ($evento === null) {          // no existe, o es de OTRA persona: de vuelta a la lista
+    header('Location: index.php?noexiste=1');
     exit;
 }
 
@@ -77,14 +79,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hora_db        = ($hora !== '') ? $hora : null;
         $descripcion_db = ($descripcion !== '') ? $descripcion : null;
 
-        // UPDATE con WHERE id = ?  (sin WHERE se cambiarían TODOS los eventos)
+        // WHERE id = ? AND usuario_id = ?  (sin WHERE se cambiarían TODOS los eventos)
         $stmt = $mysqli->prepare(
             'UPDATE eventos
                 SET titulo = ?, fecha = ?, hora = ?, categoria_id = ?, descripcion = ?
-              WHERE id = ?'
+              WHERE id = ? AND usuario_id = ?'
         );
-        // s s s i s i  → el último (i) es el id del WHERE
-        $stmt->bind_param('sssisi', $titulo, $fecha, $hora_db, $categoriaId, $descripcion_db, $id);
+        // s s s i s i i  → los dos últimos (i) son el id y el dueño del WHERE
+        $stmt->bind_param('sssisii', $titulo, $fecha, $hora_db, $categoriaId, $descripcion_db, $id, $usuarioId);
         $stmt->execute();
         $stmt->close();
         $mysqli->close();
