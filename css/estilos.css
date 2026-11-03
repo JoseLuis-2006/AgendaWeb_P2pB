@@ -389,3 +389,12 @@ input:focus, select:focus, textarea:focus {
 .tarjeta--auth { max-width: 460px; margin-inline: auto; }
 .acciones-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .acciones-form .btn-secondary { padding: 10px 20px; font-size: 0.95rem; }
+
+/* ---- P9: buscador ---- */
+.buscador { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+.buscador .form-input  { flex: 1 1 220px; width: auto; }
+.buscador .form-select { flex: 0 1 210px; width: auto; }
+
+/* .btn-secondary no trae padding propio; lo damos en el buscador y en "sin resultados" */
+.buscador .btn-secondary,
+.empty-state .btn-secondary { padding: 10px 20px; font-size: 0.95rem; }
