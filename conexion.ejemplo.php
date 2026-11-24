@@ -7,5 +7,6 @@ try {
     $mysqli = new mysqli("localhost", "TU_USUARIO", "TU_CONTRASEÑA", "agenda");
     $mysqli->set_charset("utf8mb4");
 } catch (mysqli_sql_exception $e) {
+    http_response_code(500);
     die("No se pudo conectar a la base de datos.");
 }
